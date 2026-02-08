@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM Card</title>
+
+<style>
+:root{
+--bg-light:#f5f5f7;
+--bg-dark:#0b0b0f;
+--glass:rgba(255,255,255,.7);
+--glass-dark:rgba(28,28,30,.85);
+--green:linear-gradient(135deg,#34c759,#0f9b4d);
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display";
+background:var(--bg-light);
+color:#111;
+transition:.4s;
+}
+
+body.dark{
+background:var(--bg-dark);
+color:white;
+}
+
+/* HEADER */
+header{
+padding:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.title{font-size:30px;font-weight:700}
+.subtitle{font-size:14px;opacity:.6}
+
+.header-buttons button{
+background:none;
+border:none;
+font-size:22px;
+cursor:pointer;
+margin-left:8px;
+}
+
+/* CARD */
+.card{
+background:var(--green);
+border-radius:22px;
+padding:20px;
+color:white;
+margin:20px;
+box-shadow:0 25px 45px rgba(0,0,0,.35);
+transform-style:preserve-3d;
+transition:transform .15s;
+cursor:pointer;
+}
+
+.card:active{
+transform:scale(.97) rotateX(8deg);
+}
+
+.card-header{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+opacity:.9;
+}
+
+.card-number{
+font-size:18px;
+letter-spacing:2px;
+margin:20px 0;
+}
+
+.card-footer{
+display:flex;
+justify-content:space-between;
+}
+
+/* BOTTOM */
+.actions{
+position:fixed;
+bottom:20px;
+left:20px;
+right:20px;
+}
+
+.actions button{
+width:100%;
+padding:16px;
+border-radius:16px;
+border:none;
+background:#007aff;
+color:white;
+font-size:16px;
+}
+
+/* MODALS */
+.modal{
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+background:rgba(0,0,0,.45);
+backdrop-filter:blur(14px);
+}
+
+.modal-content{
+background:var(--glass);
+padding:22px;
+border-radius:24px;
+width:90%;
+max-width:420px;
+}
+
+body.dark .modal-content{
+background:var(--glass-dark);
+}
+
+input{
+width:100%;
+margin-top:10px;
+padding:12px;
+border-radius:12px;
+border:none;
+}
+
+.modal-buttons{
+display:flex;
+gap:10px;
+margin-top:16px;
+}
+
+.modal-buttons button{
+flex:1;
+padding:12px;
+border-radius:12px;
+border:none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div>
+<div class="title">CM Card</div>
+<div class="subtitle">Gracias por elegirnos</div>
+</div>
+<div class="header-buttons">
+<button onclick="openSettings()">⚙️</button>
+<button onclick="toggleMode()" id="modeBtn">🌙</button>
+</div>
+</header>
+
+<div id="cards"></div>
+
+<div class="actions">
+<button onclick="openModal()">➕ Agregar tarjeta</button>
+</div>
+
+<!-- MODAL TARJETA -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<h3>Agregar tarjeta</h3>
+<input id="name" placeholder="Nombre">
+<input id="number" maxlength="12" placeholder="Tarjeta (12 dígitos)">
+<input id="expiry" maxlength="5" placeholder="Vencimiento (YY/MM)">
+<input placeholder="PIN" type="password">
+
+<div class="modal-buttons">
+<button onclick="closeModal()">Cancelar</button>
+<button onclick="saveCard()">Guardar</button>
+</div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="modal" id="settings">
+<div class="modal-content">
+<h3>⚙️ Ajustes</h3>
+<p style="opacity:.6">CM Company</p>
+<button onclick="toggleMode()">Cambiar modo</button>
+<button onclick="closeSettings()">Cerrar</button>
+</div>
+</div>
+
+<audio id="tapSound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3"></audio>
+
+<script>
+let cardsData=JSON.parse(localStorage.getItem("cmcards"))||[];
+const tap=document.getElementById("tapSound");
+
+function play(){tap.currentTime=0;tap.play()}
+
+function render(){
+cards.innerHTML="";
+cardsData.forEach((c,i)=>{
+const d=document.createElement("div");
+d.className="card";
+d.innerHTML=`
+<div class="card-header">
+<div>Banco Metropolitano de Cuba</div>
+<div>🅱️🅲</div>
+</div>
+<div class="card-number">${c.number}</div>
+<div class="card-footer">
+<div>${c.name}</div>
+<div>${c.expiry}</div>
+</div>`;
+d.onclick=()=>{
+play();
+if(confirm("¿Eliminar tarjeta?")){
+cardsData.splice(i,1);
+save();
+}
+}
+cards.appendChild(d);
+});
+}
+
+function save(){
+localStorage.setItem("cmcards",JSON.stringify(cardsData));
+render();
+}
+
+function saveCard(){
+cardsData.push({
+name:name.value||"Usuario",
+number:number.value,
+expiry:expiry.value
+});
+play();
+save();
+closeModal();
+}
+
+function toggleMode(){
+document.body.classList.toggle("dark");
+modeBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
+play();
+}
+
+function openModal(){modal.style.display="flex"}
+function closeModal(){modal.style.display="none"}
+function openSettings(){settings.style.display="flex"}
+function closeSettings(){settings.style.display="none"}
+
+render();
+</script>
+
+</body>
+</html>
